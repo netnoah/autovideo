@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__web-reader__webReader",
+      "mcp__web-search-prime__web_search_prime",
+      "Bash(start:*)",
+      "Bash(curl -s -L https://greasyfork.org/zh-CN/scripts/560027/code)",
+      "Bash(curl -s -L https://greasyfork.org/zh-CN/scripts/553914/code)",
+      "Bash(curl -s -L --max-time 15 \"https://greasyfork.org/zh-CN/scripts/560027/code\")",
+      "Bash(curl -s -L --max-time 15 \"https://greasyfork.org/zh-CN/scripts/474636/code\")",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/study/StudyCenter.aspx\")",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/Js/common.js?v=20210823\")",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/study/CoursePlay.aspx\")",
+      "Bash(grep -oE '\\(script|inline\\)[^>]*>[^<]{0,200}')",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/Js/master.js?v=3\")",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/Js/Des.js\")",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/study/school/gd/gdxz.aspx\")",
+      "Bash(curl -s -L --max-time 15 \"https://gbpx.gd.gov.cn/gdceportal/study/school/gd/course.aspx\")",
+      "Bash(grep -oE 'function\\\\s+\\\\w+[Ss]tudy\\\\w*\\\\\\([^\\)]*\\\\\\)\\\\s*\\\\{[^}]{0,500}')",
+      "Bash(npm install:*)",
+      "Bash(npx @playwright/mcp --help)",
+      "Bash(npx playwright:*)",
+      "Bash(node check-login.js)",
+      "Bash(taskkill //F //IM msedge.exe)",
+      "Bash(node check-gbpx-login.js)",
+      "Bash(node auto-study.js)",
+      "Read(//c/Users/Administrator/.claude/skills/**)",
+      "Read(//c/Users/Administrator/.claude/**)",
+      "Bash(node check-courses.js)",
+      "Bash(node check-completed.js)"
+    ]
+  }
+}
