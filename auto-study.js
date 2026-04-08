@@ -5,6 +5,13 @@ const EDGE_DATA_DIR = process.env.LOCALAPPDATA + "\\Microsoft\\Edge\\User Data";
 const EDGE_EXE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const STUDY_URL = "https://gbpx.gd.gov.cn/gdceportal/study/StudyCenter.aspx";
 
+// --- Utility: timestamp for logging ---
+function log(msg) {
+  const now = new Date();
+  const ts = now.toLocaleString("zh-CN", { hour12: false });
+  console.log(`[${ts}] ${msg}`);
+}
+
 // --- Utility: wait with cancellation ---
 function sleep(ms) {
   return new Promise((resolve, reject) => {
@@ -116,7 +123,7 @@ async function getVideoStatus(page) {
 
 // --- Wait for video to finish, checking every CHECK_INTERVAL ---
 async function waitForVideoFinish(page, onTick) {
-  console.log("  Monitoring playback...");
+  log("  Monitoring playback...");
   while (true) {
     await sleep(CHECK_INTERVAL);
     const status = await getVideoStatus(page);
@@ -127,19 +134,19 @@ async function waitForVideoFinish(page, onTick) {
     };
 
     if (status.noVideo) {
-      console.log("  [tick] No video element detected");
+      log("  [tick] No video element detected");
     } else if (status.ended) {
-      console.log(`  Video ended (${fmt(status.currentTime)}/${fmt(status.duration)})`);
+      log(`  Video ended (${fmt(status.currentTime)}/${fmt(status.duration)})`);
       return true;
     } else if (status.playing) {
-      console.log(`  [tick] Playing: ${fmt(status.currentTime)} / ${fmt(status.duration)}`);
+      log(`  [tick] Playing: ${fmt(status.currentTime)} / ${fmt(status.duration)}`);
       if (onTick) onTick(status);
     } else if (status.paused) {
       // Paused but not ended — might need to resume
-      console.log(`  [tick] Paused at ${fmt(status.currentTime)}, trying to resume...`);
+      log(`  [tick] Paused at ${fmt(status.currentTime)}, trying to resume...`);
       const resumed = await tryPlayVideo(page);
       if (!resumed) {
-        console.log("  Could not resume, video may have finished or hit an error");
+        log("  Could not resume, video may have finished or hit an error");
         // Treat prolonged pause as potentially finished
       }
     }
@@ -250,7 +257,17 @@ async function closeVideoPage(context) {
     // 6. Close video page (ensure only one video at a time)
     console.log("  Closing video page...");
     await closeVideoPage(context);
-    console.log("  Video page closed. Preparing for next course...");
+    console.log("  Video page closed.");
+
+    // 7. Refresh study center page so course list updates
+    log("  Refreshing study center page to update course list...");
+    try {
+      await mainPage.reload({ waitUntil: "networkidle", timeout: 30000 });
+      await mainPage.waitForTimeout(3000);
+      log("  Page refreshed.");
+    } catch (e) {
+      log("  Refresh failed: " + e.message);
+    }
 
     // Brief pause before next iteration
     await sleep(3000);
