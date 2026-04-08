@@ -183,13 +183,109 @@ async function clickContinueStudy(courseFrame, context) {
   return videoPage;
 }
 
+// --- Try clicking a red close button on the video page ---
+async function tryRedCloseButton(page) {
+  const redBtnSelectors = [
+    // Common red close button patterns
+    '.close-btn', '.btn-close', '.video-close',
+    '[class*="close"]', '[class*="Close"]',
+    'button.close', 'a.close',
+    // Top-right area generic selectors
+    '.header .close', '.top-bar .close', '.toolbar .close',
+    // Icon-based close buttons
+    '[class*="icon-close"]', '[class*="icon-close-btn"]',
+    // Chinese close text
+    'button:has-text("关闭")', 'a:has-text("关闭")',
+    'span:has-text("关闭")',
+  ];
+
+  for (const sel of redBtnSelectors) {
+    try {
+      const btn = await page.$(sel);
+      if (!btn) continue;
+      const box = await btn.boundingBox();
+      if (!box) continue;
+      // Check if the button is in the top-right area (right 30% of viewport, top 30%)
+      const viewport = page.viewportSize();
+      if (box.x + box.width > viewport.width * 0.7 && box.y < viewport.height * 0.3) {
+        // Check if it looks red (has red color, red background, or red class)
+        const isRed = await page.evaluate((el) => {
+          const style = window.getComputedStyle(el);
+          const bg = style.backgroundColor;
+          const color = style.color;
+          const cls = el.className || '';
+          return (
+            bg.includes('rgb(255') || bg.includes('rgb(220') ||
+            color.includes('rgb(255') || color.includes('rgb(220') ||
+            cls.toLowerCase().includes('red') || cls.toLowerCase().includes('danger') ||
+            cls.toLowerCase().includes('error')
+          );
+        }, btn);
+        if (isRed) {
+          await btn.click();
+          console.log(`  Clicked red close button: ${sel}`);
+          return true;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Fallback: try finding any clickable element in the top-right corner that might be red
+  try {
+    const clicked = await page.evaluate(() => {
+      const viewport = { w: window.innerWidth, h: window.innerHeight };
+      const els = document.querySelectorAll('button, a, span, div[role="button"], i, svg');
+      for (const el of els) {
+        const rect = el.getBoundingClientRect();
+        // Must be small (button-sized) and in top-right corner
+        if (rect.width > 60 || rect.height > 60) continue;
+        if (rect.x + rect.width < viewport.w * 0.7) continue;
+        if (rect.y > viewport.h * 0.3) continue;
+        const style = window.getComputedStyle(el);
+        const bg = style.backgroundColor;
+        const color = style.color;
+        const cls = (el.className || '').toString().toLowerCase();
+        if (
+          bg.includes('255,') || bg.includes('220,') ||
+          color.includes('255,') || color.includes('220,') ||
+          cls.includes('red') || cls.includes('danger') || cls.includes('error') ||
+          cls.includes('close')
+        ) {
+          el.click();
+          return { clicked: true, tag: el.tagName, cls: cls };
+        }
+      }
+      return { clicked: false };
+    });
+    if (clicked && clicked.clicked) {
+      console.log(`  Clicked top-right element: <${clicked.tag}> .${clicked.cls}`);
+      return true;
+    }
+  } catch (_) {}
+
+  return false;
+}
+
 // --- Close video page safely ---
 async function closeVideoPage(context) {
   const videoPages = context.pages().filter(p =>
     p.url().includes("shawcoder.xyz") || p !== context.pages()[0]
   );
   for (const vp of videoPages) {
-    try { await vp.close(); } catch (_) {}
+    try {
+      // First try clicking the red close button on the page
+      const redClosed = await tryRedCloseButton(vp);
+      if (redClosed) {
+        // Wait a moment to see if the page closes itself
+        await sleep(3000);
+        if (vp.isClosed()) {
+          console.log("  Video page closed by red button.");
+          continue;
+        }
+        console.log("  Red button didn't close the page, falling back to page.close()");
+      }
+      await vp.close();
+    } catch (_) {}
   }
 }
 
