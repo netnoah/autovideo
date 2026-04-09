@@ -27,7 +27,9 @@
       "Read(//c/Users/Administrator/.claude/skills/**)",
       "Read(//c/Users/Administrator/.claude/**)",
       "Bash(node check-courses.js)",
-      "Bash(node check-completed.js)"
+      "Bash(node check-completed.js)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)"
     ]
   }
 }
